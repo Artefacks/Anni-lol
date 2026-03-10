@@ -5,7 +5,7 @@ const initialState = {
   title: '',
   artist: '',
   link: '',
-  vibe: '',
+  passageTime: '',
 };
 
 function PlaylistForm() {
@@ -59,8 +59,13 @@ function PlaylistForm() {
           <input name="link" value={form.link} onChange={onChange} />
         </label>
         <label>
-          Vibe / commentaire (optionnel)
-          <textarea name="vibe" value={form.vibe} onChange={onChange} />
+          Choisir l’heure de passage
+          <select name="passageTime" value={form.passageTime} onChange={onChange}>
+            <option value="">Quand tu veux</option>
+            <option value="debut">Début de soirée</option>
+            <option value="milieu">Milieu de soirée</option>
+            <option value="fin">Fin de soirée</option>
+          </select>
         </label>
 
         <button type="submit" disabled={loading}>
