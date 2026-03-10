@@ -14,7 +14,7 @@ function normalizeAuthor(author) {
 function GamblingPanel() {
   const [author, setAuthor] = useState('');
   const [rows, setRows] = useState([]);
-  const [pendingVote, setPendingVote] = useState(null);
+  const [pendingVotes, setPendingVotes] = useState({});
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
 
@@ -81,12 +81,13 @@ function GamblingPanel() {
 
   const onQuickBet = (betType, prediction) => {
     setStatus({ type: '', message: '' });
-    setPendingVote({ betType, prediction });
+    setPendingVotes((previous) => ({ ...previous, [betType]: prediction }));
   };
 
   const onConfirmVote = async () => {
-    if (!pendingVote) {
-      setStatus({ type: 'error', message: 'Choisis d’abord une ligne de pari.' });
+    const pendingEntries = Object.entries(pendingVotes);
+    if (pendingEntries.length === 0) {
+      setStatus({ type: 'error', message: 'Choisis au moins une option de pari.' });
       return;
     }
 
@@ -95,22 +96,30 @@ function GamblingPanel() {
       return;
     }
 
-    const currentPrediction = currentVoteByBetType.get(pendingVote.betType);
-    if (currentPrediction === pendingVote.prediction) {
-      setStatus({ type: 'success', message: 'Tu as déjà ce vote actif.' });
-      setPendingVote(null);
+    const votesToSubmit = pendingEntries.filter(([betType, prediction]) => {
+      const currentPrediction = currentVoteByBetType.get(betType);
+      return currentPrediction !== prediction;
+    });
+
+    if (votesToSubmit.length === 0) {
+      setStatus({ type: 'success', message: 'Tu as déjà ces votes actifs.' });
+      setPendingVotes({});
       return;
     }
 
     setLoading(true);
     try {
-      await submitToTable(TABLES.GAMBLING, {
-        author: author.trim(),
-        betType: pendingVote.betType,
-        prediction: pendingVote.prediction,
-      });
-      setStatus({ type: 'success', message: 'Vote enregistré et mis à jour 🎯' });
-      setPendingVote(null);
+      await Promise.all(
+        votesToSubmit.map(([betType, prediction]) =>
+          submitToTable(TABLES.GAMBLING, {
+            author: author.trim(),
+            betType,
+            prediction,
+          }),
+        ),
+      );
+      setStatus({ type: 'success', message: 'Votes enregistrés et mis à jour 🎯' });
+      setPendingVotes({});
       await loadRows();
     } catch (error) {
       setStatus({ type: 'error', message: error.message });
@@ -148,9 +157,7 @@ function GamblingPanel() {
               className={`bet-line ${
                 currentVoteByBetType.get('mael_bac_23h') === option ? 'selected' : ''
               } ${
-                pendingVote?.betType === 'mael_bac_23h' && pendingVote?.prediction === option
-                  ? 'pending-selected'
-                  : ''
+                pendingVotes['mael_bac_23h'] === option ? 'pending-selected' : ''
               }`}
               disabled={loading}
               onClick={() => onQuickBet('mael_bac_23h', option)}
@@ -176,9 +183,7 @@ function GamblingPanel() {
               className={`bet-line ${
                 currentVoteByBetType.get('party_end_time') === option ? 'selected' : ''
               } ${
-                pendingVote?.betType === 'party_end_time' && pendingVote?.prediction === option
-                  ? 'pending-selected'
-                  : ''
+                pendingVotes['party_end_time'] === option ? 'pending-selected' : ''
               }`}
               disabled={loading}
               onClick={() => onQuickBet('party_end_time', option)}
@@ -203,9 +208,7 @@ function GamblingPanel() {
               className={`bet-line ${
                 currentVoteByBetType.get('weather') === option ? 'selected' : ''
               } ${
-                pendingVote?.betType === 'weather' && pendingVote?.prediction === option
-                  ? 'pending-selected'
-                  : ''
+                pendingVotes['weather'] === option ? 'pending-selected' : ''
               }`}
               disabled={loading}
               onClick={() => onQuickBet('weather', option)}
@@ -230,9 +233,7 @@ function GamblingPanel() {
               className={`bet-line ${
                 currentVoteByBetType.get('roof_visit') === option ? 'selected' : ''
               } ${
-                pendingVote?.betType === 'roof_visit' && pendingVote?.prediction === option
-                  ? 'pending-selected'
-                  : ''
+                pendingVotes['roof_visit'] === option ? 'pending-selected' : ''
               }`}
               disabled={loading}
               onClick={() => onQuickBet('roof_visit', option)}
@@ -258,9 +259,7 @@ function GamblingPanel() {
               className={`bet-line ${
                 currentVoteByBetType.get('marc_dry_march') === option ? 'selected' : ''
               } ${
-                pendingVote?.betType === 'marc_dry_march' && pendingVote?.prediction === option
-                  ? 'pending-selected'
-                  : ''
+                pendingVotes['marc_dry_march'] === option ? 'pending-selected' : ''
               }`}
               disabled={loading}
               onClick={() => onQuickBet('marc_dry_march', option)}
@@ -274,20 +273,27 @@ function GamblingPanel() {
 
       <div className="bet-block confirm-vote">
         <h3>Valider ton vote</h3>
-        {pendingVote ? (
-          <p className="current-vote">
-            Sélection: <strong>{betTypeLabel[pendingVote.betType]}</strong> ·{' '}
-            <strong>{pendingVote.prediction}</strong>
-          </p>
-        ) : (
+        {Object.keys(pendingVotes).length === 0 ? (
           <p className="current-vote">Clique d’abord une option de pari.</p>
+        ) : (
+          <ul className="custom-bets-list">
+            {Object.entries(pendingVotes).map(([betType, prediction]) => (
+              <li key={betType}>
+                <strong>{betTypeLabel[betType] ?? betType}</strong> · {prediction}
+              </li>
+            ))}
+          </ul>
         )}
         <div className="form">
           <label>
             Nom / Prénom
             <input value={author} onChange={(event) => setAuthor(event.target.value)} />
           </label>
-          <button type="button" disabled={loading || !pendingVote} onClick={onConfirmVote}>
+          <button
+            type="button"
+            disabled={loading || Object.keys(pendingVotes).length === 0}
+            onClick={onConfirmVote}
+          >
             {loading ? 'Envoi...' : 'Valider mon vote'}
           </button>
         </div>
