@@ -3,6 +3,7 @@ import QuizForm from './components/QuizForm';
 import PlaylistForm from './components/PlaylistForm';
 import KaraokeForm from './components/KaraokeForm';
 import InformationPanel from './components/InformationPanel';
+import GamblingPanel from './components/GamblingPanel';
 
 function App() {
   const [selectedContribution, setSelectedContribution] = useState('playlist');
@@ -10,6 +11,9 @@ function App() {
   const selectedForm = useMemo(() => {
     if (selectedContribution === 'information') {
       return <InformationPanel />;
+    }
+    if (selectedContribution === 'gambling') {
+      return <GamblingPanel />;
     }
     if (selectedContribution === 'quiz') {
       return <QuizForm />;
@@ -49,6 +53,13 @@ function App() {
             onClick={() => setSelectedContribution('quiz')}
           >
             🧠 Ajouter une question quiz
+          </button>
+          <button
+            type="button"
+            className={`choice-card ${selectedContribution === 'gambling' ? 'active' : ''}`}
+            onClick={() => setSelectedContribution('gambling')}
+          >
+            🎲 Gambling
           </button>
           <button
             type="button"

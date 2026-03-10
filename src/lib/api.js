@@ -9,7 +9,12 @@ export const TABLES = {
   PLAYLIST: 'playlist_submissions',
   KARAOKE: 'karaoke_submissions',
   HOSTING: 'hosting_requests',
+  GAMBLING: 'gambling_bets',
 };
+
+function normalizeAuthor(author) {
+  return String(author ?? '').trim().toLowerCase();
+}
 
 async function getSupabaseClient() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
@@ -87,6 +92,14 @@ function mapPayloadForTable(table, payload) {
     };
   }
 
+  if (table === TABLES.GAMBLING) {
+    return {
+      author: payload.author,
+      bet_type: payload.betType,
+      prediction: payload.prediction,
+    };
+  }
+
   return payload;
 }
 
@@ -99,6 +112,12 @@ async function postToRemote(table, payload) {
   const mappedPayload = mapPayloadForTable(table, payload);
   const { error } = await client.from(table).insert(mappedPayload);
   if (error) {
+    if (error.message?.includes('permission denied')) {
+      throw new Error('Supabase: permission refusée (policy RLS INSERT manquante).');
+    }
+    if (error.message?.includes('does not exist')) {
+      throw new Error('Supabase: table manquante. Vérifie que la table existe.');
+    }
     throw new Error(`Supabase: ${error.message}`);
   }
   return true;
@@ -113,14 +132,51 @@ export async function submitToTable(table, payload) {
 
   const store = readStore();
   const currentRows = store[table] ?? [];
-  store[table] = [entry, ...currentRows];
+
+  if (table === TABLES.GAMBLING) {
+    // Keep only one local vote per person and per bet type.
+    const authorKey = normalizeAuthor(entry.author);
+    const betTypeKey = String(entry.betType ?? '');
+    const filteredRows = currentRows.filter((row) => {
+      const rowAuthorKey = normalizeAuthor(row.author);
+      const rowBetTypeKey = String(row.betType ?? row.bet_type ?? '');
+      return !(rowAuthorKey === authorKey && rowBetTypeKey === betTypeKey);
+    });
+    store[table] = [entry, ...filteredRows];
+  } else {
+    store[table] = [entry, ...currentRows];
+  }
+
   writeStore(store);
 
-  await postToRemote(table, entry);
-  return entry;
+  try {
+    await postToRemote(table, entry);
+    return entry;
+  } catch (error) {
+    // Roll back local optimistic write when remote insert fails.
+    const rollbackStore = readStore();
+    const rollbackRows = rollbackStore[table] ?? [];
+    rollbackStore[table] = rollbackRows.filter((row) => row.id !== entry.id);
+    writeStore(rollbackStore);
+    throw error;
+  }
 }
 
 export function getTableRows(table) {
   const store = readStore();
   return store[table] ?? [];
+}
+
+export async function fetchTableRows(table) {
+  const client = await getSupabaseClient();
+  if (!client) {
+    return getTableRows(table);
+  }
+
+  const { data, error } = await client.from(table).select('*').order('created_at', { ascending: false });
+  if (error) {
+    return getTableRows(table);
+  }
+
+  return data ?? [];
 }

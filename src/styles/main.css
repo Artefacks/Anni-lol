@@ -134,39 +134,82 @@ body {
   text-decoration: underline;
 }
 
-.bingo-progress {
-  margin: 0 0 12px;
+.bet-block {
+  margin: 14px 0;
+}
+
+.bet-block h3 {
+  margin: 0 0 8px;
+  color: #6b2e17;
+}
+
+.current-vote {
+  margin: 0 0 10px;
   color: #7a4d39;
+  font-size: 0.95rem;
 }
 
-.bingo-grid {
+.bet-lines {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-}
-
-.bingo-item {
-  border: 1px solid #efbc85;
-  border-radius: 12px;
-  background: #fff7ed;
-  color: #5d2f1a;
-  padding: 10px;
-  display: grid;
-  grid-template-columns: 26px 1fr;
   gap: 8px;
-  text-align: left;
+}
+
+.bet-line {
+  border: 2px solid #e9b883;
+  border-radius: 12px;
+  background: #fff2e2;
+  color: #5b2e1a;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.bingo-item:hover {
+.bet-line:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 16px rgba(199, 108, 46, 0.16);
+  border-color: #d57f37;
+  box-shadow: 0 8px 15px rgba(196, 103, 42, 0.16);
 }
 
-.bingo-item.checked {
-  background: #ffe8cc;
-  border-color: #df8f48;
+.bet-line.selected {
+  border-color: #b64a16;
+  background: linear-gradient(135deg, #f08b3d, #d76424);
+  color: #fff8f1;
+  box-shadow: 0 10px 18px rgba(182, 74, 22, 0.28);
+}
+
+.bet-line.pending-selected {
+  outline: 3px solid #7c2d12;
+  outline-offset: 1px;
+}
+
+.bet-line strong {
+  color: #8f3f1c;
+}
+
+.bet-line.selected strong {
+  color: #fff8f1;
+}
+
+.custom-bets-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+}
+
+.confirm-vote {
+  border: 2px dashed #d57f37;
+}
+
+@media (max-width: 640px) {
+  .bet-line {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .form {
