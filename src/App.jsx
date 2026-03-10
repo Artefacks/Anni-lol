@@ -41,7 +41,7 @@ function App() {
             className={`choice-card ${selectedContribution === 'karaoke' ? 'active' : ''}`}
             onClick={() => setSelectedContribution('karaoke')}
           >
-            🎤 Proposer un karaoké
+            🎤 Chanter un karaoké
           </button>
           <button
             type="button"

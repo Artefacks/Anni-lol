@@ -46,8 +46,8 @@ function QuizForm() {
     <article className="card">
       <h2>Question pour le quiz 🧩</h2>
       <p className="section-help">
-        Le principe: tu proposes 1 question avec 4 réponses, puis tu sélectionnes la bonne
-        réponse. On utilisera ces questions pendant la soirée.
+        On va faire un Kahoot pendant la soirée. Les questions sont libres, mets ce que tu veux.
+        Eliot Hugi tirera les questions.
       </p>
       <form onSubmit={onSubmit} className="form">
         <label>

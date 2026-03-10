@@ -76,7 +76,7 @@ function mapPayloadForTable(table, payload) {
       title: payload.title,
       artist: payload.artist,
       link: payload.link || null,
-      vibe: payload.passageTime || null,
+      passage_time: payload.passageTime || null,
     };
   }
 
