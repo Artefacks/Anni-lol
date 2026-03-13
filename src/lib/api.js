@@ -10,6 +10,7 @@ export const TABLES = {
   KARAOKE: 'karaoke_submissions',
   HOSTING: 'hosting_requests',
   GAMBLING: 'gambling_bets',
+  PHOTOS: 'photo_wall_submissions',
 };
 
 function normalizeAuthor(author) {
@@ -97,6 +98,14 @@ function mapPayloadForTable(table, payload) {
       author: payload.author,
       bet_type: payload.betType,
       prediction: payload.prediction,
+    };
+  }
+
+  if (table === TABLES.PHOTOS) {
+    return {
+      author: payload.author || 'Anonyme',
+      caption: payload.caption || null,
+      image_data: payload.imageData,
     };
   }
 

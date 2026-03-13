@@ -4,6 +4,7 @@ import PlaylistForm from './components/PlaylistForm';
 import KaraokeForm from './components/KaraokeForm';
 import InformationPanel from './components/InformationPanel';
 import GamblingPanel from './components/GamblingPanel';
+import PhotoWallPanel from './components/PhotoWallPanel';
 
 function App() {
   const [selectedContribution, setSelectedContribution] = useState('playlist');
@@ -14,6 +15,9 @@ function App() {
     }
     if (selectedContribution === 'gambling') {
       return <GamblingPanel />;
+    }
+    if (selectedContribution === 'photos') {
+      return <PhotoWallPanel />;
     }
     if (selectedContribution === 'quiz') {
       return <QuizForm />;
@@ -60,6 +64,13 @@ function App() {
             onClick={() => setSelectedContribution('gambling')}
           >
             🎲 Gambling
+          </button>
+          <button
+            type="button"
+            className={`choice-card ${selectedContribution === 'photos' ? 'active' : ''}`}
+            onClick={() => setSelectedContribution('photos')}
+          >
+            📸 Photos
           </button>
           <button
             type="button"
