@@ -54,6 +54,21 @@ function PhotoWallPanel() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!cameraOpen || !videoRef.current || !cameraStreamRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    video.srcObject = cameraStreamRef.current;
+    video.play().catch(() => {
+      setStatus({
+        type: 'error',
+        message: 'La caméra est autorisée mais la vidéo ne démarre pas. Réessaie une fois.',
+      });
+    });
+  }, [cameraOpen]);
+
   const normalizedPhotos = useMemo(
     () =>
       photos
@@ -93,11 +108,6 @@ function PhotoWallPanel() {
       });
       cameraStreamRef.current = stream;
       setCameraOpen(true);
-      window.setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      }, 0);
     } catch {
       setStatus({
         type: 'error',
@@ -119,6 +129,13 @@ function PhotoWallPanel() {
       return;
     }
     const video = videoRef.current;
+    if (!video.videoWidth || !video.videoHeight) {
+      setStatus({
+        type: 'error',
+        message: 'La vidéo caméra n’est pas prête. Attends 1 seconde puis recapture.',
+      });
+      return;
+    }
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth || 1280;
     canvas.height = video.videoHeight || 720;
